@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>jquery-ptmpl benchmark</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="https://raw.github.com/jquery/jquery-tmpl/master/jquery.tmpl.min.js"></script>
+
+<script src="../jquery.ptmpl.js"></script>
+
+<style>
+body { font-family: Tahoma; font-size: 12px; }
+table { border-collapse: collapse; }
+tr:hover td { background-color: #fee; }
+th, td { border: 1px solid #ccc; padding: .25em .5em; }
+.r { text-align: right; }
+#code { background-color: #eee; padding: .25em .5em; }
+</style>
+<body>
+<h1>jquery-ptmpl benchmark</h1>
+<h2>* benchmark result</h2>
+<div id="re"></div>
+<h2>* sample code</h2>
+<pre id="code"></pre>
+
+<script id="tmpl-re" type="text/x-jquery-tmpl">
+	<table>
+		<tr>
+			<th colspan="3">condition</th>
+			<th colspan="6">result</th>
+		</tr>
+		<tr>
+			<th>selector</th>
+			<th>arg.a.length</th>
+			<th>repeat</th>
+			<th>time<br>(ptmpl)</th>
+			<th>time<br>(tmpl)</th>
+			<th>ratio<br>(ptmpl / tmpl)</th>
+			<th>time<br>(ptmpl - empty)</th>
+			<th>time<br>(tmpl - empty)</th>
+			<th>ratio<br>((ptmpl - empty) / (tmpl - empty))</th>
+		</tr>
+		{{each(k, v) re}}
+			<tr>
+				<td class="l">{{= v.selector}}</td>
+				<td class="r">{{= v.arg && v.arg.a && v.arg.a.length}}</td>
+				<td class="r">{{= v.repeat}}</td>
+				<td class="r">{{= v.ptmpl_t}} ms</td>
+				<td class="r">{{= v.tmpl_t}} ms</td>
+				<td class="l">{{= (v.ptmpl_t / v.tmpl_t)}}</td>
+				{{$ var ptmpl_sub = v.ptmpl_t - (empty_time[v.repeat] ? empty_time[v.repeat].ptmpl_t : 0); }}
+				{{$ var tmpl_sub = v.tmpl_t - (empty_time[v.repeat] ? empty_time[v.repeat].tmpl_t : 0); }}
+				<td class="r">{{= ptmpl_sub}} ms</td>
+				<td class="r">{{= tmpl_sub}} ms</td>
+				<td class="l">{{= (ptmpl_sub / tmpl_sub)}}</td>
+			</tr>
+		{{/each}}
+	</table>
+</script>
+
+<script>
+jQuery(function($) {
+	prepare_tmpl_pure_html();
+	var re = [];
+	benchmark(re, "#tmpl-empty", {}, 1);
+	benchmark(re, "#tmpl-empty", {}, 10);
+	benchmark(re, "#tmpl-empty", {}, 100);
+	benchmark(re, "#tmpl-empty", {}, 1000);
+	benchmark(re, "#tmpl-short-html", {}, 10);
+	benchmark(re, "#tmpl-short-html", {}, 100);
+	benchmark(re, "#tmpl-short-html", {}, 1000);
+	benchmark(re, "#tmpl-each-empty", { a:(new Array(1)) }, 1000);
+	benchmark(re, "#tmpl-each-empty", { a:(new Array(10)) }, 1000);
+	benchmark(re, "#tmpl-each-empty", { a:(new Array(100)) }, 1000);
+	benchmark(re, "#tmpl-each-empty", { a:(new Array(50000)) });
+	benchmark(re, "#tmpl-each-one-div", { a:(new Array(1)) }, 100);
+	benchmark(re, "#tmpl-each-one-div", { a:(new Array(10)) }, 100);
+	benchmark(re, "#tmpl-each-one-div", { a:(new Array(100)) }, 100);
+	benchmark(re, "#tmpl-each-one-div", { a:(new Array(5000)) });
+	benchmark(re, "#tmpl-escape-output", { a:(new Array(2)).join("a") }, 1000);
+	benchmark(re, "#tmpl-escape-output", { a:(new Array(11)).join("a") }, 1000);
+	benchmark(re, "#tmpl-escape-output", { a:(new Array(101)).join("a") }, 1000);
+	benchmark(re, "#tmpl-escape-output", { a:(new Array(1001)).join("a") }, 1000);
+	benchmark(re, "#tmpl-escape-output", { a:(new Array(5001)).join("a") });
+	benchmark(re, "#tmpl-if", { a:0 }, 1);
+	benchmark(re, "#tmpl-if", { a:0 }, 10);
+	benchmark(re, "#tmpl-if", { a:0 }, 100);
+	benchmark(re, "#tmpl-if", { a:0 }, 1000);
+	benchmark(re, "#tmpl-tmpl", { a:0 }, 1);
+	benchmark(re, "#tmpl-tmpl", { a:0 }, 10);
+	benchmark(re, "#tmpl-tmpl", { a:0 }, 100);
+	benchmark(re, "#tmpl-tmpl", { a:0 }, 1000);
+	benchmark(re, "#tmpl-pure-html");
+	var empty_time;
+	if (navigator.userAgent.match("MSIE")) {
+		empty_time = { 0.1:re[0], 1:re[1], 10:re[2], 100:re[3] };
+	} else {
+		empty_time = { 1:re[0], 10:re[1], 100:re[2], 1000:re[3] };
+	}
+	$("#tmpl-re").ptmpl({ re:re, empty_time:empty_time }).appendTo("#re");
+	$("#code").text($("#benchmark-list").html());
+});
+
+function benchmark(re, selector, arg, repeat) {
+	if (repeat) {
+		navigator.userAgent.match("MSIE") && (repeat /= 10);
+	} else {
+		repeat = 1;
+	}
+	$(selector);
+
+	st = (new Date).getTime();
+	for (var i = 0; i < repeat; ++i) $(selector).ptmpl(arg);
+	et = (new Date).getTime();
+	var ptmpl_t = et - st;
+
+	st = (new Date).getTime();
+	for (var i = 0; i < repeat; ++i) $(selector).tmpl(arg);
+	et = (new Date).getTime();
+	var tmpl_t = et - st;
+
+	re.push({ selector:selector, arg:arg, repeat:repeat, ptmpl_t:ptmpl_t, tmpl_t:tmpl_t });
+}
+
+function prepare_tmpl_pure_html() {
+	var a = [];
+	var c = navigator.userAgent.match("MSIE") ? 500 : 5000;
+	a.push('<script id="tmpl-pure-html" type="text/x-jquery-tmpl">');
+	for (var i = 0; i < c; ++i) {
+		a.push('<div>foo</div>');
+	}
+	a.push('<\/script>');
+	$("#tmpl-pure-html-container").append(a.join(""));
+}
+</script>
+
+<div id="benchmark-list">
+
+<script id="tmpl-empty" type="text/x-jquery-tmpl"></script>
+<script id="tmpl-short-html" type="text/x-jquery-tmpl"><div>foo</div></script>
+
+<script id="tmpl-each-empty" type="text/x-jquery-tmpl">{{each(k, v) a}}{{/each}}</script>
+<script id="tmpl-each-one-div" type="text/x-jquery-tmpl">{{each(k, v) a}}<div>a</div>{{/each}}</script>
+
+<script id="tmpl-escape-output" type="text/x-jquery-tmpl">{{= a}}{{= a}}{{= a}}{{= a}}{{= a}}{{= a}}{{= a}}{{= a}}{{= a}}{{= a}}</script>
+
+<script id="tmpl-if" type="text/x-jquery-tmpl">{{if a}}a{{else}}b{{/if}}</script>
+
+<script id="tmpl-tmpl" type="text/x-jquery-tmpl">{{tmpl() "#tmpl-tmpl-core"}}</script>
+<script id="tmpl-tmpl-core" type="text/x-jquery-tmpl"></script>
+
+<div id="tmpl-pure-html-container" type="text/x-jquery-tmpl"></div>
+
+</div>
