@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.0.0
+ * jQuery Pluggable Templates Plugin 1.0.1
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -27,7 +27,7 @@ jQuery.ptmplCompile = ptmplCompile;
 jQuery.ptmplDefineTag = ptmplDefineTag;
 jQuery.ptmplEscapeHtml = _PTMPL_ESCAPE_HTML;
 jQuery.ptmplUnescapeHtml = _PTMPL_UNESCAPE_HTML;
-jQuery.ptmplEscapeString = _PTMPL_ESCAPE_STRING;
+jQuery.ptmplEscapeStringLiteral = _PTMPL_ESCAPE_STRING_LITERAL;
 
 // helper function.
 function _PTMPL_ESCAPE_HTML(str) {
@@ -48,7 +48,7 @@ function _PTMPL_UNESCAPE_HTML(str) {
 		.replace(/&amp;/g, '&');
 }
 
-function _PTMPL_ESCAPE_STRING(str) {
+function _PTMPL_ESCAPE_STRING_LITERAL(str) {
 	return str
 		.replace(/\\/g, '\\\\')
 		.replace(/\r?\n\t*/g, '\\n')
@@ -93,7 +93,7 @@ function ptmplCompile(text, option) {
 	code.push('with (_PTMPL_HELPER._PTMPL_SCOPE(_PTMPL_ARG)) {');
 	text.replace(/((?:a|[^a])*?)(?:\{\{((?:a|[^a])*?)\}\}|$)/g, function (all, html, tag) {
 		if (html) {
-			var line = jQuery.ptmplEscapeString(html);
+			var line = jQuery.ptmplEscapeStringLiteral(html);
 			code.push('_PTMPL_HTML.push("', line, '");');
 		}
 		if (tag) {
@@ -171,11 +171,11 @@ jQuery.ptmplDefineTag({
 	'/each': function (code, str) {
 		code.push('});');
 	},
-	'break': function (code, str) {
-		code.push('break;');
-	},
 	'continue': function (code, str) {
-		code.push('continue;');
+		code.push('return true;');
+	},
+	'break': function (code, str) {
+		code.push('return false;');
 	}});
 
 jQuery.ptmplDefineTag({
