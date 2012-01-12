@@ -162,7 +162,10 @@ jQuery.ptmplDefineTag({
 
 jQuery.ptmplDefineTag({
 	'each': function (code, str) {
-		str.match(/\s*\((?:\s*(\w+)\s*(?:,\s*(\w+)\s*)?)\)\s*((?:a|[^a])+)/);
+		var m = str.match(/\s*\((?:\s*(\w+)\s*(?:,\s*(\w+)\s*))\)\s*((?:a|[^a])+)/);
+		if (m == null) {
+			throw 'ptmpl syntax error: near {{each'+m+'}}';
+		}
 		var key = RegExp.$1;
 		var val = RegExp.$2;
 		var exp = RegExp.$3;
@@ -180,7 +183,10 @@ jQuery.ptmplDefineTag({
 
 jQuery.ptmplDefineTag({
 	'tmpl': function (code, str) {
-		str.match(/\s*\(((?:a|[^a])*?)\)\s*((?:a|[^a])+)/); // TODO: fix imperfect matching
+		var m = str.match(/\s*\(((?:a|[^a])*?)\)\s*((?:a|[^a])+)/); // TODO: fix imperfect matching
+		if (m == null) {
+			throw 'ptmpl syntax error: near {{tmpl'+m+'}}';
+		}
 		var arg = RegExp.$1 || '{}';
 		var selector = RegExp.$2;
 		// optimization, avoid jQuery.find() if simple id selector.
