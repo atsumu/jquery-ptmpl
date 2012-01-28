@@ -154,6 +154,21 @@ jQuery.ptmplDefineTag({
 	}});
 
 jQuery.ptmplDefineTag({
+	'tryif': function (code, str) {
+		code.push('if ((function () { try { return (', str, '); } catch (e) {} })()) {');
+	},
+	'catchelse': el = function (code, str) {
+		if (str) {
+			code.push('} else if ((function () { try { return (', str, '); } catch (e) {} })()) {');
+		} else {
+			code.push('} else {');
+		}
+	},
+	'/tryif': function (code, str) {
+		code.push('}');
+	}});
+
+jQuery.ptmplDefineTag({
 	'each': function (code, str) {
 		var m = str.match(/\s*\((?:\s*(\w+)\s*(?:,\s*(\w+)\s*))\)\s*((?:a|[^a])+)/);
 		if (m == null) throw 'ptmpl syntax error: near {{each'+m+'}}';
