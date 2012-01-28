@@ -13,10 +13,10 @@
 jQuery.fn.ptmpl = ptmplFn;
 
 // export for plugin.
-jQuery.ptmplGetCompiled = ptmplGetCompiled;
-jQuery.ptmplCompile = ptmplCompile;
 jQuery.ptmplDefineTag = ptmplDefineTag;
 jQuery.ptmplUndefineTag = ptmplUndefineTag;
+jQuery.ptmplCompile = ptmplCompile;
+jQuery.ptmplGetCompiled = ptmplGetCompiled;
 jQuery.ptmplEscapeHtml = ptmplEscapeHtml;
 jQuery.ptmplUnescapeHtml = ptmplUnescapeHtml;
 jQuery.ptmplEscapeUrl = encodeURIComponent;
@@ -25,54 +25,11 @@ jQuery.ptmplScope = ptmplScope;
 jQuery.ptmplCache = {};
 jQuery.ptmplTagTable = {};
 
-// helper function.
-function ptmplEscapeHtml(str) {
-	return (str ? str.toString() : ''+str)
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/\"/g, '&quot;')
-		.replace(/\'/g, '&#039;');
-}
-
-function ptmplUnescapeHtml(str) {
-	return (str ? str.toString() : ''+str)
-		.replace(/&#039;/g, "'")
-		.replace(/&quot;/g, '"')
-		.replace(/&gt;/g, '>')
-		.replace(/&lt;/g, '<')
-		.replace(/&amp;/g, '&');
-}
-
-function ptmplEscapeStringLiteral(str) {
-	return str
-		.replace(/\\/g, '\\\\')
-		.replace(/\r?\n\t*/g, '\\n')
-		.replace(/\'/g, "\\'")
-		.replace(/\"/g, '\\"');
-}
-
-function ptmplScope(map) {
-	function scope() {}
-	scope.prototype = map;
-	return new scope;
-}
-
-//
 function ptmplFn(data, option) {
 	var text = jQuery.ptmplGetCompiled(this[0], option)(option, data);
 	var el = document.createElement('div');
 	el.innerHTML = text;
 	return jQuery(jQuery.makeArray(el.childNodes));
-}
-
-function ptmplGetCompiled(elem, option) {
-	var id = elem.id;
-	if (id in jQuery.ptmplCache) {
-	} else {
-		jQuery.ptmplCache[id] = jQuery.ptmplCompile(elem.innerHTML, option);
-	}
-	return jQuery.ptmplCache[id];
 }
 
 function ptmplDefineTag(map) {
@@ -119,7 +76,48 @@ function ptmplCompile(text, option) {
 	return tmpl;
 }
 
-// define tag.
+function ptmplGetCompiled(elem, option) {
+	var id = elem.id;
+	if (id in jQuery.ptmplCache) {
+	} else {
+		jQuery.ptmplCache[id] = jQuery.ptmplCompile(elem.innerHTML, option);
+	}
+	return jQuery.ptmplCache[id];
+}
+
+function ptmplEscapeHtml(str) {
+	return (str ? str.toString() : ''+str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/\"/g, '&quot;')
+		.replace(/\'/g, '&#039;');
+}
+
+function ptmplUnescapeHtml(str) {
+	return (str ? str.toString() : ''+str)
+		.replace(/&#039;/g, "'")
+		.replace(/&quot;/g, '"')
+		.replace(/&gt;/g, '>')
+		.replace(/&lt;/g, '<')
+		.replace(/&amp;/g, '&');
+}
+
+function ptmplEscapeStringLiteral(str) {
+	return str
+		.replace(/\\/g, '\\\\')
+		.replace(/\r?\n\t*/g, '\\n')
+		.replace(/\'/g, "\\'")
+		.replace(/\"/g, '\\"');
+}
+
+function ptmplScope(map) {
+	function scope() {}
+	scope.prototype = map;
+	return new scope;
+}
+
+// define tags.
 jQuery.ptmplDefineTag({
 	// not escaped output
 	'html': function (code, str) {
