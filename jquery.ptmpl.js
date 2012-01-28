@@ -21,7 +21,7 @@ jQuery.ptmplGetCompiled = ptmplGetCompiled;
 jQuery.ptmplEscapeHtml = ptmplEscapeHtml;
 jQuery.ptmplUnescapeHtml = ptmplUnescapeHtml;
 jQuery.ptmplEscapeUrl = encodeURIComponent;
-jQuery.ptmplEscapeStringLiteral = ptmplEscapeStringLiteral;
+jQuery.ptmplTranslateHtmlToLiteral = ptmplTranslateHtmlToLiteral;
 jQuery.ptmplScope = ptmplScope;
 jQuery.ptmplCache = {};
 jQuery.ptmplTagTable = {};
@@ -56,7 +56,7 @@ function ptmplCompile(text, option) {
 	code.push('with (jQuery.ptmplScope(_PTMPL_ARG)) {');
 	text.replace(/((?:a|[^a])*?)(?:\{\{((?:a|[^a])*?)\}\}|$)/g, function (all, html, tag) {
 		if (html) {
-			var line = jQuery.ptmplEscapeStringLiteral(html);
+			var line = jQuery.ptmplTranslateHtmlToLiteral(html);
 			code.push('_PTMPL_HTML.push("', line, '");');
 		}
 		if (tag) {
@@ -107,7 +107,7 @@ function ptmplUnescapeHtml(str) {
 		.replace(/&amp;/g, '&');
 }
 
-function ptmplEscapeStringLiteral(str) {
+function ptmplTranslateHtmlToLiteral(str) {
 	return str
 		.replace(/\\/g, '\\\\')
 		.replace(/\r?\n\t*/g, '\\n')
