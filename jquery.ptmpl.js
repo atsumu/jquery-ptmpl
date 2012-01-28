@@ -26,7 +26,7 @@ jQuery.ptmplTagTable = {};
 
 // helper function.
 function ptmplEscapeHtml(str) {
-	return (str ? str.toString() : ""+str)
+	return (str ? str.toString() : ''+str)
 		.replace(/&/g, '&amp;')
 		.replace(/</g, '&lt;')
 		.replace(/>/g, '&gt;')
@@ -35,11 +35,11 @@ function ptmplEscapeHtml(str) {
 }
 
 function ptmplUnescapeHtml(str) {
-	return str.toString()
-		.replace(/&quot;/g, '"')
+	return (str ? str.toString() : ''+str)
 		.replace(/&#039;/g, "'")
-		.replace(/&lt;/g, '<')
+		.replace(/&quot;/g, '"')
 		.replace(/&gt;/g, '>')
+		.replace(/&lt;/g, '<')
 		.replace(/&amp;/g, '&');
 }
 
@@ -156,9 +156,7 @@ jQuery.ptmplDefineTag({
 jQuery.ptmplDefineTag({
 	'each': function (code, str) {
 		var m = str.match(/\s*\((?:\s*(\w+)\s*(?:,\s*(\w+)\s*))\)\s*((?:a|[^a])+)/);
-		if (m == null) {
-			throw 'ptmpl syntax error: near {{each'+m+'}}';
-		}
+		if (m == null) throw 'ptmpl syntax error: near {{each'+m+'}}';
 		var key = RegExp.$1;
 		var val = RegExp.$2;
 		var exp = RegExp.$3;
@@ -177,9 +175,7 @@ jQuery.ptmplDefineTag({
 jQuery.ptmplDefineTag({
 	'tmpl': function (code, str) {
 		var m = str.match(/\s*\(((?:a|[^a])*?)\)\s*((?:a|[^a])+)/); // TODO: fix imperfect matching
-		if (m == null) {
-			throw 'ptmpl syntax error: near {{tmpl'+m+'}}';
-		}
+		if (m == null) throw 'ptmpl syntax error: near {{tmpl'+m+'}}';
 		var arg = RegExp.$1 || '{}';
 		var selector = RegExp.$2;
 		// optimization, avoid jQuery.find() if simple id selector.
