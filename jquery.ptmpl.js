@@ -11,6 +11,7 @@
 
 // jquery extension.
 jQuery.fn.ptmpl = ptmplFn;
+jQuery.ptmpl = ptmplPtmpl;
 
 // export for plugin.
 jQuery.ptmplDefineTag = ptmplDefineTag;
@@ -30,6 +31,10 @@ function ptmplFn(data, option) {
 	var el = document.createElement('div');
 	el.innerHTML = text;
 	return jQuery(jQuery.makeArray(el.childNodes));
+}
+
+function ptmplPtmpl(str, data, option) {
+	return jQuery.fn.ptmpl.apply([{ id:null, innerHTML:str }], [data, option]);
 }
 
 function ptmplDefineTag(map) {
@@ -78,11 +83,10 @@ function ptmplCompile(text, option) {
 
 function ptmplGetCompiled(elem, option) {
 	var id = elem.id;
-	if (id in jQuery.ptmplCache) {
-	} else {
-		jQuery.ptmplCache[id] = jQuery.ptmplCompile(elem.innerHTML, option);
-	}
-	return jQuery.ptmplCache[id];
+	var text = elem.innerHTML;
+	if (!id) return jQuery.ptmplCompile(text, option);
+	if (id in jQuery.ptmplCache) return jQuery.ptmplCache[id];
+	return jQuery.ptmplCache[id] = jQuery.ptmplCompile(text, option);
 }
 
 function ptmplEscapeHtml(str) {
