@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.0.1
+ * jQuery Pluggable Templates Plugin 1.0.2
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -9,15 +9,6 @@
  */
 (function (jQuery, undefined) {
 
-var _PTMPL_CACHE = {};
-var _PTMPL_TAGTABLE = {};
-
-var _PTMPL_HELPER = {
-	_PTMPL_CACHE: _PTMPL_CACHE,
-	_PTMPL_TAGTABLE: _PTMPL_TAGTABLE,
-	_PTMPL_ESCAPE_HTML: _PTMPL_ESCAPE_HTML,
-	_PTMPL_SCOPE: _PTMPL_SCOPE };
-
 // jquery extension.
 jQuery.fn.ptmpl = ptmplFn;
 
@@ -25,12 +16,16 @@ jQuery.fn.ptmpl = ptmplFn;
 jQuery.ptmplGetCompiled = ptmplGetCompiled;
 jQuery.ptmplCompile = ptmplCompile;
 jQuery.ptmplDefineTag = ptmplDefineTag;
-jQuery.ptmplEscapeHtml = _PTMPL_ESCAPE_HTML;
-jQuery.ptmplUnescapeHtml = _PTMPL_UNESCAPE_HTML;
-jQuery.ptmplEscapeStringLiteral = _PTMPL_ESCAPE_STRING_LITERAL;
+jQuery.ptmplEscapeHtml = ptmplEscapeHtml;
+jQuery.ptmplUnescapeHtml = ptmplUnescapeHtml;
+jQuery.ptmplEscapeUrl = encodeURIComponent;
+jQuery.ptmplEscapeStringLiteral = ptmplEscapeStringLiteral;
+jQuery.ptmplScope = ptmplScope;
+jQuery.ptmplCache = {};
+jQuery.ptmplTagTable = {};
 
 // helper function.
-function _PTMPL_ESCAPE_HTML(str) {
+function ptmplEscapeHtml(str) {
 	return (str ? str.toString() : ""+str)
 		.replace(/&/g, '&amp;')
 		.replace(/</g, '&lt;')
@@ -39,7 +34,7 @@ function _PTMPL_ESCAPE_HTML(str) {
 		.replace(/\'/g, '&#039;');
 }
 
-function _PTMPL_UNESCAPE_HTML(str) {
+function ptmplUnescapeHtml(str) {
 	return str.toString()
 		.replace(/&quot;/g, '"')
 		.replace(/&#039;/g, "'")
@@ -48,7 +43,7 @@ function _PTMPL_UNESCAPE_HTML(str) {
 		.replace(/&amp;/g, '&');
 }
 
-function _PTMPL_ESCAPE_STRING_LITERAL(str) {
+function ptmplEscapeStringLiteral(str) {
 	return str
 		.replace(/\\/g, '\\\\')
 		.replace(/\r?\n\t*/g, '\\n')
@@ -56,7 +51,7 @@ function _PTMPL_ESCAPE_STRING_LITERAL(str) {
 		.replace(/\"/g, '\\"');
 }
 
-function _PTMPL_SCOPE(map) {
+function ptmplScope(map) {
 	function scope() {}
 	scope.prototype = map;
 	return new scope;
@@ -64,7 +59,7 @@ function _PTMPL_SCOPE(map) {
 
 //
 function ptmplFn(data, option) {
-	var text = jQuery.ptmplGetCompiled(this[0], option)(_PTMPL_HELPER, option, data);
+	var text = jQuery.ptmplGetCompiled(this[0], option)(option, data);
 	var el = document.createElement('div');
 	el.innerHTML = text;
 	return jQuery(jQuery.makeArray(el.childNodes));
@@ -72,16 +67,16 @@ function ptmplFn(data, option) {
 
 function ptmplGetCompiled(elem, option) {
 	var id = elem.id;
-	if (id in _PTMPL_CACHE) {
+	if (id in jQuery.ptmplCache) {
 	} else {
-		_PTMPL_CACHE[id] = jQuery.ptmplCompile(elem.innerHTML, option);
+		jQuery.ptmplCache[id] = jQuery.ptmplCompile(elem.innerHTML, option);
 	}
-	return _PTMPL_CACHE[id];
+	return jQuery.ptmplCache[id];
 }
 
 function ptmplDefineTag(map) {
 	jQuery.each(map, function (key, proc) {
-		_PTMPL_TAGTABLE[key] = proc;
+		jQuery.ptmplTagTable[key] = proc;
 	});
 };
 
@@ -89,8 +84,7 @@ function ptmplCompile(text, option) {
 	if (!option) option = {};
 	var code = [];
 	code.push('var _PTMPL_HTML = [];');
-	code.push('with (_PTMPL_HELPER._PTMPL_SCOPE(_PTMPL_HELPER)) {');
-	code.push('with (_PTMPL_HELPER._PTMPL_SCOPE(_PTMPL_ARG)) {');
+	code.push('with (jQuery.ptmplScope(_PTMPL_ARG)) {');
 	text.replace(/((?:a|[^a])*?)(?:\{\{((?:a|[^a])*?)\}\}|$)/g, function (all, html, tag) {
 		if (html) {
 			var line = jQuery.ptmplEscapeStringLiteral(html);
@@ -100,10 +94,9 @@ function ptmplCompile(text, option) {
 			tag.match(/([^\s\(]+)((?:a|[^a])*)/);
 			var key = RegExp.$1;
 			var str = RegExp.$2;
-			_PTMPL_TAGTABLE[key](code, str, option);
+			jQuery.ptmplTagTable[key](code, str, option);
 		}
 	});
-	code.push('}');
 	code.push('}');
 	code.push('return _PTMPL_HTML.join("");');
 	var joined = code.join('');
@@ -111,7 +104,7 @@ function ptmplCompile(text, option) {
 		console.log('code:', joined);
 	}
 	try {
-		var tmpl = new Function('_PTMPL_HELPER', '_PTMPL_OPTION', '_PTMPL_ARG', joined);
+		var tmpl = new Function('_PTMPL_OPTION', '_PTMPL_ARG', joined);
 	} catch (e) {
 		console && console.log('syntax error:', joined, e);
 		throw e;
@@ -127,11 +120,11 @@ jQuery.ptmplDefineTag({
 	},
 	// html escaped output
 	'=': function (code, str) {
-		code.push('_PTMPL_HTML.push(_PTMPL_ESCAPE_HTML((', str, ')));');
+		code.push('_PTMPL_HTML.push(jQuery.ptmplEscapeHtml((', str, ')));');
 	},
 	// url escaped output
 	'~': function (code, str) {
-		code.push('_PTMPL_HTML.push(encodeURIComponent((', str, ')));');
+		code.push('_PTMPL_HTML.push(jQuery.ptmplEscapeUrl((', str, ')));');
 	},
 	// evaluate
 	'$': function (code, str) {
@@ -192,9 +185,9 @@ jQuery.ptmplDefineTag({
 		// optimization, avoid jQuery.find() if simple id selector.
 		var id = selector.match(/^\s*['"]#(.+?)["']\s*$/) && RegExp.$1;
 		if (id) {
-			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled(document.getElementById("', id, '"), _PTMPL_OPTION)(_PTMPL_HELPER, _PTMPL_OPTION, (', arg, ')));');
+			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled(document.getElementById("', id, '"), _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
 		} else {
-			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled(jQuery.find((', selector, '))[0], _PTMPL_OPTION)(_PTMPL_HELPER, _PTMPL_OPTION, (', arg, ')));');
+			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled(jQuery.find((', selector, '))[0], _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
 		}
 	}});
 
