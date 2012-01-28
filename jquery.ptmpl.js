@@ -16,6 +16,7 @@ jQuery.fn.ptmpl = ptmplFn;
 jQuery.ptmplGetCompiled = ptmplGetCompiled;
 jQuery.ptmplCompile = ptmplCompile;
 jQuery.ptmplDefineTag = ptmplDefineTag;
+jQuery.ptmplUndefineTag = ptmplUndefineTag;
 jQuery.ptmplEscapeHtml = ptmplEscapeHtml;
 jQuery.ptmplUnescapeHtml = ptmplUnescapeHtml;
 jQuery.ptmplEscapeUrl = encodeURIComponent;
@@ -77,6 +78,12 @@ function ptmplGetCompiled(elem, option) {
 function ptmplDefineTag(map) {
 	jQuery.each(map, function (key, proc) {
 		jQuery.ptmplTagTable[key] = proc;
+	});
+};
+
+function ptmplUndefineTag(list) {
+	jQuery.each(list, function (i, key) {
+		delete jQuery.ptmplTagTable[key];
 	});
 };
 
