@@ -225,6 +225,36 @@ comment.
 if ... else ... end.
 
 
+### {{tryif < exp >}} ... {{catchelse [< exp >]}} ... {{/tryif}}
+
+try < exp > and if the result is true value, then execute trailing clause.
+
+if the result is false value or exception is thrown, then evaluate next catchelse < exp >.
+
+#### sample
+```html
+<div id="place"></div>
+<script id="sample" type="text/x-jquery-tmpl">
+  {{tryif a.b.length >= 1}}
+    here is not executed, because `a.b` is undefined and thrown exception.
+  {{catchelse a.c.length >= 1}}
+    here is not executed, because not `a.c.length >= 1`.
+  {{catchelse a.d.length >= 1}}
+    here is not executed, because `a.d` is undefined and thrown exception.
+  {{catchelse a.e.length >= 1}}
+    here is executed.
+  {{catchelse}}
+    here is not executed.
+  {{/tryif}}
+</script>
+<script>
+  jQuery(function ($) {
+    $("#sample").ptmpl({ a:{ c:[], e:[1,2,3] } }).appendTo("#place");
+  });
+</script>
+```
+
+
 ### {{each(< k >, < v >) < exp >}} ... {{/each}}, {{break}}, {{continue}}
 
 same as jQuery.each(< exp >, function (< k >, < v >) { ... }).
