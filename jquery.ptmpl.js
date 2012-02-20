@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.0.2
+ * jQuery Pluggable Templates Plugin 1.0.3
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -180,7 +180,7 @@ jQuery.ptmplDefineTag({
 jQuery.ptmplDefineTag({
 	'each': function (code, str) {
 		var m = str.match(/\s*\((?:\s*(\w+)\s*(?:,\s*(\w+)\s*))\)\s+((?:a|[^a])+)/);
-		if (m == null) throw 'ptmpl syntax error: near {{each'+m+'}}';
+		if (m == null) throw 'ptmpl syntax error: near {{each'+str+'}}';
 		var key = RegExp.$1;
 		var val = RegExp.$2;
 		var exp = RegExp.$3;
@@ -199,7 +199,7 @@ jQuery.ptmplDefineTag({
 jQuery.ptmplDefineTag({
 	'tmpl': function (code, str) {
 		var m = str.match(/\s*\(((?:a|[^a])*?)\)\s+((?:a|[^a])+)/); // TODO: fix imperfect matching
-		if (m == null) throw 'ptmpl syntax error: near {{tmpl'+m+'}}';
+		if (m == null) throw 'ptmpl syntax error: near {{tmpl'+str+'}}';
 		var arg = RegExp.$1 || '{}';
 		var selector = RegExp.$2;
 		// optimization, avoid jQuery.find() if simple id selector.
