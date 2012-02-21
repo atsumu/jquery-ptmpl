@@ -21,7 +21,8 @@ jQuery.ptmplGetCompiled = ptmplGetCompiled;
 jQuery.ptmplEscapeHtml = ptmplEscapeHtml;
 jQuery.ptmplUnescapeHtml = ptmplUnescapeHtml;
 jQuery.ptmplEscapeUrl = encodeURIComponent;
-jQuery.ptmplTranslateHtmlToLiteral = ptmplTranslateHtmlToLiteral;
+jQuery.ptmplEscapeStringLiteral = ptmplEscapeStringLiteral;
+jQuery.ptmplTranslateHtmlToLiteral = ptmplEscapeStringLiteral;
 jQuery.ptmplScope = ptmplScope;
 jQuery.ptmplCache = {};
 jQuery.ptmplTagTable = {};
@@ -49,9 +50,10 @@ function ptmplUndefineTag(list) {
 	});
 };
 
-function ptmplCompile(text, option) {
+function ptmplCompile(text, option, debugInfo) {
 	if (!option) option = {};
 	var code = [];
+	if (!option.noDebugInfo) code.push('try {');
 	code.push('var _PTMPL_HTML = [];');
 	code.push('with (jQuery.ptmplScope(_PTMPL_ARG)) {');
 	text.replace(/((?:a|[^a])*?)(?:\{\{((?:a|[^a])*?)\}\}|$)/g, function (all, html, tag) {
@@ -68,6 +70,11 @@ function ptmplCompile(text, option) {
 	});
 	code.push('}');
 	code.push('return _PTMPL_HTML.join("");');
+	if (!option.noDebugInfo) {
+		code.push('} catch (e) {');
+		code.push('throw new Error("RuntimeError in '+jQuery.ptmplEscapeStringLiteral(debugInfo.id ? debugInfo.id : debugInfo.text.slice(0, 100))+', "+e.message);');
+		code.push('}');
+	}
 	var joined = code.join('');
 	if (option.debug) {
 		console.log('code:', joined);
@@ -75,7 +82,9 @@ function ptmplCompile(text, option) {
 	try {
 		var tmpl = new Function('_PTMPL_OPTION', '_PTMPL_ARG', joined);
 	} catch (e) {
-		console && console.log('syntax error:', joined, e);
+		if (!option.noDebugInfo) {
+			e.message += ' in '+(debugInfo.id ? debugInfo.id : debugInfo.text.slice(0, 100));
+		}
 		throw e;
 	}
 	return tmpl;
@@ -84,9 +93,9 @@ function ptmplCompile(text, option) {
 function ptmplGetCompiled(elem, option) {
 	var id = elem.id;
 	var text = elem.innerHTML;
-	if (!id) return jQuery.ptmplCompile(text, option);
+	if (!id) return jQuery.ptmplCompile(text, option, { text:text });
 	if (id in jQuery.ptmplCache) return jQuery.ptmplCache[id];
-	return jQuery.ptmplCache[id] = jQuery.ptmplCompile(text, option);
+	return jQuery.ptmplCache[id] = jQuery.ptmplCompile(text, option, { id:"#"+id });
 }
 
 function ptmplEscapeHtml(str) {
@@ -107,7 +116,7 @@ function ptmplUnescapeHtml(str) {
 		.replace(/&amp;/g, '&');
 }
 
-function ptmplTranslateHtmlToLiteral(str) {
+function ptmplEscapeStringLiteral(str) {
 	return str
 		.replace(/\\/g, '\\\\')
 		.replace(/\r?\n\t*/g, '\\n')
