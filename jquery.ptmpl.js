@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.0.4
+ * jQuery Pluggable Templates Plugin 1.0.5
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -93,9 +93,13 @@ function ptmplCompile(text, option, debugInfo) {
 function ptmplGetCompiled(elem, option) {
 	var id = elem.id;
 	var text = elem.innerHTML;
-	if (!id) return jQuery.ptmplCompile(text, option, { text:text });
-	if (id in jQuery.ptmplCache) return jQuery.ptmplCache[id];
-	return jQuery.ptmplCache[id] = jQuery.ptmplCompile(text, option, { id:"#"+id });
+	if (id) {
+		if (id in jQuery.ptmplCache) return jQuery.ptmplCache[id];
+		if (text) return jQuery.ptmplCache[id] = jQuery.ptmplCompile(text, option, { id:"#"+id });
+		text = document.getElementById(id).innerHTML;
+		return jQuery.ptmplCache[id] = jQuery.ptmplCompile(text, option, { id:"#"+id });
+	}
+	return jQuery.ptmplCompile(text, option, { text:text });
 }
 
 function ptmplEscapeHtml(str) {
@@ -214,7 +218,7 @@ jQuery.ptmplDefineTag({
 		// optimization, avoid jQuery.find() if simple id selector.
 		var id = selector.match(/^\s*['"]#(.+?)["']\s*$/) && RegExp.$1;
 		if (id) {
-			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled(document.getElementById("', id, '"), _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
+			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled({ id:"', id, '" }, _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
 		} else {
 			code.push('_PTMPL_HTML.push(jQuery.ptmplGetCompiled(jQuery.find((', selector, '))[0], _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
 		}
