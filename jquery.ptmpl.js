@@ -224,4 +224,18 @@ jQuery.ptmplDefineTag({
 		}
 	}});
 
+jQuery.ptmplStripPluginTranslateFunctionStack = [];
+
+jQuery.ptmplDefineTag({
+	'strip': function (code, str) {
+		var old = jQuery.ptmplTranslateHtmlToLiteral;
+		jQuery.ptmplStripPluginTranslateFunctionStack.push(old);
+		jQuery.ptmplTranslateHtmlToLiteral = function (html) {
+			return old(html.replace(/\r?\n\t*/g, ''));
+		};
+	},
+	'/strip': function (code, str) {
+		jQuery.ptmplTranslateHtmlToLiteral = jQuery.ptmplStripPluginTranslateFunctionStack.pop();
+	}});
+
 })(jQuery);

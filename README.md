@@ -269,6 +269,12 @@ call other template with < data > and < option >.
 < exp > result is used for selector.
 
 
+### {{strip}} ... {{/strip}}
+
+remove newline and line head tab characters from template code.
+it works at compile-time.
+
+
 ## Sample Code
 
 ```html
