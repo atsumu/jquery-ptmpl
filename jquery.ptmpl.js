@@ -59,7 +59,7 @@ function ptmplCompile(text, option, debugInfo) {
 	text.replace(/((?:a|[^a])*?)(?:\{\{((?:a|[^a])*?)\}\}|$)/g, function (all, html, tag) {
 		if (html) {
 			var line = jQuery.ptmplTranslateHtmlToLiteral(html);
-			code.push('_PTMPL_HTML.push("', line, '");');
+			if (line) code.push('_PTMPL_HTML.push("', line, '");');
 		}
 		if (tag) {
 			tag.match(/([^\s\(]+)((?:a|[^a])*)/);
