@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.0.6
+ * jQuery Pluggable Templates Plugin 1.0.7
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -187,6 +187,14 @@ jQuery.ptmplDefineTag({
 		}
 	},
 	'/tryif': function (code, str) {
+		code.push('}');
+	}});
+
+jQuery.ptmplDefineTag({
+	'for': function (code, str) {
+		code.push('for (', str, ') {');
+	},
+	'/for': function (code, str) {
 		code.push('}');
 	}});
 

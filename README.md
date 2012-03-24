@@ -255,6 +255,11 @@ if the result is false value or exception is thrown, then evaluate next catchels
 ```
 
 
+### {{for < exp1 >; < exp2 >; < exp3 >}} ... {{/for}}
+
+simple "for" loop.
+
+
 ### {{each(< k >, < v >) < exp >}} ... {{/each}}, {{break}}, {{continue}}
 
 same as jQuery.each(< exp >, function (< k >, < v >) { ... }).
