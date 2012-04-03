@@ -27,6 +27,40 @@ $.ptmplScope = ptmplScope;
 $.ptmplCache = {};
 $.ptmplTagTable = {};
 
+var toString = Object.prototype.toString;
+
+var makeArray = function(array, results) {
+	array = Array.prototype.slice.call(array, 0);
+	if (results) {
+		results.push.apply(results, array);
+		return results;
+	}
+	return array;
+};
+
+try {
+	Array.prototype.slice.call(document.documentElement.childNodes, 0)[0].nodeType;
+} catch (e) {
+	makeArray = function (array, results) {
+		var i = 0;
+		var ret = results || [];
+		if (toString.call(array) === "[object Array]") {
+			Array.prototype.push.apply(ret, array);
+		} else {
+			if (typeof array.length === "number") {
+				for (var l = array.length; i < l; i++) {
+					ret.push(array[i]);
+				}
+			} else {
+				for (; array[i]; i++) {
+					ret.push(array[i]);
+				}
+			}
+		}
+		return ret;
+	};
+}
+
 function ptmplFn(data, option) {
 	if (!$.isArray(data)) data = [data];
 	var text = "";
@@ -36,7 +70,7 @@ function ptmplFn(data, option) {
 	});
 	var el = document.createElement('div');
 	el.innerHTML = text;
-	return $(Array.prototype.slice.call(el.childNodes, 0));
+	return $(makeArray(el.childNodes));
 }
 
 function ptmplPtmpl(str, data, option) {
