@@ -7,7 +7,7 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  */
-(function ($) {
+(function ($, undefined) {
 
 // jquery extension.
 $.fn.ptmpl = ptmplFn;
@@ -28,7 +28,12 @@ $.ptmplCache = {};
 $.ptmplTagTable = {};
 
 function ptmplFn(data, option) {
-	var text = $.ptmplGetCompiled(this[0], option)(option, data);
+	if (!$.isArray(data)) data = [data];
+	var text = "";
+	var template = this[0];
+	$.each(data, function() {
+		text += $.ptmplGetCompiled(template, option)(option, this);
+	});
 	var el = document.createElement('div');
 	el.innerHTML = text;
 	return $($.makeArray(el.childNodes));
