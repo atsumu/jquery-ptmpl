@@ -38,9 +38,6 @@ th, td { border: 1px solid #ccc; padding: .25em .5em; }
 			<th>time<br>(ptmpl)</th>
 			<th>time<br>(tmpl)</th>
 			<th>ratio<br>(ptmpl / tmpl)</th>
-			<th>time<br>(ptmpl - empty)</th>
-			<th>time<br>(tmpl - empty)</th>
-			<th>ratio<br>((ptmpl - empty) / (tmpl - empty))</th>
 		</tr>
 		{{each(k, v) re}}
 			<tr>
@@ -50,11 +47,6 @@ th, td { border: 1px solid #ccc; padding: .25em .5em; }
 				<td class="r">{{= v.ptmpl_t}} ms</td>
 				<td class="r">{{= v.tmpl_t}} ms</td>
 				<td class="l">{{= (v.ptmpl_t / v.tmpl_t)}}</td>
-				{{$ var ptmpl_sub = v.ptmpl_t - (empty_time[v.repeat] ? empty_time[v.repeat].ptmpl_t : 0); }}
-				{{$ var tmpl_sub = v.tmpl_t - (empty_time[v.repeat] ? empty_time[v.repeat].tmpl_t : 0); }}
-				<td class="r">{{= ptmpl_sub}} ms</td>
-				<td class="r">{{= tmpl_sub}} ms</td>
-				<td class="l">{{= (ptmpl_sub / tmpl_sub)}}</td>
 			</tr>
 		{{/each}}
 	</table>
