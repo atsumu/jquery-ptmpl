@@ -63,13 +63,13 @@ try {
 
 function ptmplFn(data, option) {
 	if (!$.isArray(data)) data = [data];
-	var text = "";
+	var text = [];
 	var template = this[0];
 	$.each(data, function() {
-		text += $.ptmplGetCompiled(template, option)(option, this);
+		text.push($.ptmplGetCompiled(template, option)(option, this));
 	});
 	var el = document.createElement('div');
-	el.innerHTML = text;
+	el.innerHTML = text.join('');
 	return $(makeArray(el.childNodes));
 }
 
