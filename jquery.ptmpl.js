@@ -36,7 +36,7 @@ function ptmplFn(data, option) {
 	});
 	var el = document.createElement('div');
 	el.innerHTML = text;
-	return $($.makeArray(el.childNodes));
+	return $(Array.prototype.slice.call(el.childNodes, 0));
 }
 
 function ptmplPtmpl(str, data, option) {
