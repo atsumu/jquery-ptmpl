@@ -39,7 +39,7 @@ var makeArray = function(array, results) {
 };
 
 try {
-	Array.prototype.slice.call(document.documentElement.childNodes, 0)[0].nodeType;
+	var test = Array.prototype.slice.call(document.documentElement.childNodes, 0)[0].nodeType;
 } catch (e) {
 	makeArray = function (array, results) {
 		var i = 0;
@@ -59,6 +59,9 @@ try {
 		}
 		return ret;
 	};
+} finally {
+	// free the test object if the test was successful
+	if (test) test = null;
 }
 
 function ptmplFn(data, option) {
