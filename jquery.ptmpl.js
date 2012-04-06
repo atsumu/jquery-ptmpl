@@ -27,42 +27,9 @@ $.ptmplScope = ptmplScope;
 $.ptmplCache = {};
 $.ptmplTagTable = {};
 
-var toString = Object.prototype.toString;
-
-var makeArray = function(array, results) {
-	array = Array.prototype.slice.call(array, 0);
-	if (results) {
-		results.push.apply(results, array);
-		return results;
-	}
-	return array;
+var makeArray = $.makeArray || function(array) {
+	return Array.prototype.slice.call(array, 0);
 };
-
-try {
-	var test = Array.prototype.slice.call(document.documentElement.childNodes, 0)[0].nodeType;
-} catch (e) {
-	makeArray = function (array, results) {
-		var i = 0;
-		var ret = results || [];
-		if (toString.call(array) === "[object Array]") {
-			Array.prototype.push.apply(ret, array);
-		} else {
-			if (typeof array.length === "number") {
-				for (var l = array.length; i < l; i++) {
-					ret.push(array[i]);
-				}
-			} else {
-				for (; array[i]; i++) {
-					ret.push(array[i]);
-				}
-			}
-		}
-		return ret;
-	};
-} finally {
-	// free the test object if the test was successful
-	if (test) test = null;
-}
 
 function ptmplFn(data, option) {
 	if (!$.isArray(data)) data = [data];
