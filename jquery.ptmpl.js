@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.1.0
+ * jQuery Pluggable Templates Plugin 1.1.1
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -155,7 +155,7 @@ $.ptmplDefineTag({
 	},
 	// url escaped output
 	'~': function (code, str) {
-		code.push('_PTMPL_HTML.push($.ptmplEscapeUrl((', str, ')));');
+		code.push('_PTMPL_HTML.push($.ptmplEscapeHtml($.ptmplEscapeUrl((', str, '))));');
 	},
 	// evaluate
 	'$': function (code, str) {
