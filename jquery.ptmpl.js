@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.1.1
+ * jQuery Pluggable Templates Plugin 1.1.2
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -23,13 +23,10 @@ $.ptmplUnescapeHtml = ptmplUnescapeHtml;
 $.ptmplEscapeUrl = encodeURIComponent;
 $.ptmplEscapeStringLiteral = ptmplEscapeStringLiteral;
 $.ptmplTranslateHtmlToLiteral = ptmplEscapeStringLiteral;
+$.ptmplMakeArray= $.makeArray || ptmplMakeArray;
 $.ptmplScope = ptmplScope;
 $.ptmplCache = {};
 $.ptmplTagTable = {};
-
-var makeArray = $.makeArray || function(array) {
-	return Array.prototype.slice.call(array, 0);
-};
 
 function ptmplFn(data, option) {
 	if (!$.isArray(data)) data = [data];
@@ -40,7 +37,7 @@ function ptmplFn(data, option) {
 	});
 	var el = document.createElement('div');
 	el.innerHTML = text.join('');
-	return $(makeArray(el.childNodes));
+	return $($.ptmplMakeArray(el.childNodes));
 }
 
 function ptmplPtmpl(str, data, option) {
@@ -135,6 +132,10 @@ function ptmplEscapeStringLiteral(str) {
 		.replace(/\r?\n\t*/g, '\\n')
 		.replace(/\'/g, "\\'")
 		.replace(/\"/g, '\\"');
+}
+
+function ptmplMakeArray(array) {
+	return Array.prototype.slice.call(array, 0);
 }
 
 function ptmplScope(map) {
