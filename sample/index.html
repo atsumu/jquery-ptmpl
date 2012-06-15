@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>sample - jquery-ptmpl</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script> 
+<script src="../../lib/jquery-tmpl-1.4.2.js"></script> 
+<script src="../jquery.ptmpl.js"></script> 
+
+<body>
+<h1>jquery-ptmpl</h1>
+<div class="place"></div>
+
+<script id="tmpl-root" type="text/x-jquery-tmpl">
+	<h2>root</h2>
+	<div>
+		{{tmpl({ a:a }) "#tmpl-each"}}
+	</div>
+</script>
+<script id="tmpl-each" type="text/x-jquery-tmpl">
+	{{tryif a.b.c}}
+		tryif<br>
+	{{catchelse a.d}}
+		catchelse a<br>
+	{{catchelse}}
+		else
+	{{/tryif}}
+	{{each(i, v) a}}
+		{{if i % 2 == 0}}
+			i % 2: i={{= i}} v={{= v}}<br>
+		{{else v % 3 == 0}}
+			i % 3: i={{= i}} v={{= v}}<br>
+		{{else}}
+			else : i={{= i}} v={{= v}}<br>
+		{{/if}}
+	{{/each}}
+</script>
+
+<script>
+jQuery(function($) {
+	//console.log($("#tmpl-root").ptmpl({}, { debug:true }));
+	st = (new Date).getTime();
+	var tmpl = $("#tmpl-root").ptmpl({ a:(new Array(10)) }, { debug:false });
+	et = (new Date).getTime();
+	tmpl.appendTo(".place");
+	st = (new Date).getTime();
+	//var html = $("#tmpl-root").tmpl({ a:(new Array(1000))});
+	et = (new Date).getTime();
+	//console.log(et - st);
+	//alert(et - st);
+	jQuery.ptmpl('a: {{= a}}', { a:3 }).appendTo(".place");
+});
+</script>

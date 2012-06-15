@@ -1,0 +1,162 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var path = require('path');
+var jsdom = require('jsdom');
+
+var cwd = process.cwd();
+var commands = commands();
+
+if (process.argv.length == 3) {
+	require(cwd+'/config.js');
+} else if (process.argv.length == 5) {
+	configs = [{
+		scripts: [
+			'../jquery.js',
+			'../jquery.ptmpl.js',
+			'../plugin/jquery.ptmpl.static.js'
+		],
+	}];
+	var src = process.argv[3];
+	var dst = process.argv[4];
+	var srcIsDir = fs.statSync(src).isDirectory();
+	var dstExists = path.existsSync(dst);
+	var dstIsDir = dstExists && fs.statSync(dst).isFile();
+	if (srcIsDir && (!dstExists || dstIsDir)) {
+		configs[0].srcDir = src;
+		configs[0].dstDir = dst;
+	} else if (!srcIsDir && (!dstExists || !dstIsDir)) {
+		configs[0].src = src;
+		configs[0].dst = dst;
+	} else {
+		usage(commands);
+		process.exit(1);
+	}
+} else {
+	usage(commands);
+	process.exit(1);
+}
+
+var normalizedConfigs = [];
+for (var i in configs) {
+	var config = configs[i];
+	for (var j in config.scripts) {
+		var script = config.scripts[j];
+		if (path.existsSync(script)) {
+		} else {
+			console.log('Error: '+script+' does not exist. ');
+			process.exit(1);
+		}
+	}
+	if (config.srcDir && config.dstDir) {
+		var files = findFiles(config.srcDir);
+		for (var j in files) {
+			var file = files[j];
+			var srcPath = path.join(config.srcDir, file);
+			var dstPath = path.join(config.dstDir, file);
+			normalizedConfigs.push({ scripts: config.scripts, src: srcPath, dst: dstPath });
+		}
+		console.log(normalizedConfigs);
+		process.exit();
+	} else if (config.src && config.dst) {
+		normalizedConfigs.push(config);
+	} else {
+		usage(commands);
+		process.exit(1);
+	}
+}
+
+var command = process.argv[2];
+if (commands[command]) {
+	commands[command](normalizedConfigs);
+} else {
+	usage(commands);
+	process.exit(1);
+}
+
+function usage(commands) {
+	console.log('Usage: node compile.js <command> [<src> <dst>]');
+	console.log('<command>');
+	for (var name in commands) {
+		console.log('  * '+name);
+	}
+	console.log('Both of <src> and <dst> must be file, or both of <src> and <dst> must be directory.');
+}
+
+function commands() {
+	return {
+		'compile': function (configs) {
+			for (var i in configs) {
+				compile(configs[i]);
+			}
+		},
+		'watch': function (configs) {
+			process.on('uncaughtException', function (err) {
+				console.log('uncaughtException: '+err);
+			});
+			console.log('compile.js is polling for changes. Press Ctrl-C to Stop.');
+			for (var i in configs) {
+				(function () {
+					var config = configs[i];
+					compile(config);
+					fs.watchFile(config.src, { persistent: true, interval: 1 }, function (curr, prev) {
+						console.log('');
+						console.log('Change detected at '+curr.mtime);
+						compile(config);
+					});
+				})();
+			}
+		}
+	};
+}
+
+function compile(config) {
+	console.log('src: '+config.src);
+	var tmpl = fs.readFileSync(config.src).toString();
+
+	jsdom.env({
+		html: tmpl,
+		scripts: config.scripts
+	}, function (error, window) {
+		var $ = window.jQuery;
+		var texts = [];
+		$('script[type="text/x-jquery-tmpl"]').each(function (i, elem) {
+			var compiled = $.ptmplGetCompiled(elem, { noDebugInfoOnExecute: true });
+			texts.push(compiled.toString().replace('function anonymous', '$.ptmplCache["'+elem.id+'"] = function'));
+		});
+		var dir = path.dirname(config.dst);
+		if (!path.existsSync(dir)) makeDir(dir);
+		fs.writeFileSync(config.dst, ['(function ($) {', '$.ptmplCache = $.ptmplCache || {};', texts.join('\n\n'), '})(window.jQuery || window.Zepto);\n'].join('\n'));
+	});
+
+	console.log('dst: '+config.dst);
+	console.log('ok.');
+}
+
+function findFiles(dir, parent) {
+	var files = [];
+	var items = fs.readdirSync(dir);
+	for (var i in items) {
+		var item = items[i];
+		if (parent) item = path.join(parent, item);
+		if (fs.statSync(path.join(parent ? '' : dir, item)).isDirectory()) {
+			files = files.concat(findFiles(item, item));
+		} else {
+			files.push(item);
+		}
+	}
+	return files;
+}
+
+function makeDir(dir) {
+	var dirs = dir.split('/');
+	var stack = [];
+	for (var i in dirs) {
+		stack.push(dirs[i]);
+		var p = stack.join('/');
+		if (!path.existsSync(p)) {
+			fs.mkdirSync(p);
+		}
+	}
+}
+

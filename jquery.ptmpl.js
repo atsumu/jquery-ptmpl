@@ -1,5 +1,5 @@
 /*!
- * jQuery Pluggable Templates Plugin 1.1.2
+ * jQuery Pluggable Templates Plugin 1.2.0
  * http://github.com/atsumu/jquery-ptmpl
  * Requires jQuery 1.4.2
  *
@@ -12,6 +12,7 @@
 // jquery extension.
 $.fn.ptmpl = ptmplFn;
 $.ptmpl = ptmplPtmpl;
+$.ptmplStatic = ptmplStatic;
 
 // export for plugin.
 $.ptmplDefineTag = ptmplDefineTag;
@@ -25,15 +26,16 @@ $.ptmplEscapeStringLiteral = ptmplEscapeStringLiteral;
 $.ptmplTranslateHtmlToLiteral = ptmplEscapeStringLiteral;
 $.ptmplMakeArray= $.makeArray || ptmplMakeArray;
 $.ptmplScope = ptmplScope;
-$.ptmplCache = {};
+$.ptmplCache = $.ptmplCache || {};
 $.ptmplTagTable = {};
 
 function ptmplFn(data, option) {
 	if (!$.isArray(data)) data = [data];
 	var text = [];
 	var template = this[0];
+	var compiled = $.ptmplGetCompiled(template, option);
 	$.each(data, function() {
-		text.push($.ptmplGetCompiled(template, option)(option, this));
+		text.push(compiled(option, this));
 	});
 	var el = document.createElement('div');
 	el.innerHTML = text.join('');
@@ -41,7 +43,11 @@ function ptmplFn(data, option) {
 }
 
 function ptmplPtmpl(str, data, option) {
-	return $.fn.ptmpl.apply([{ id:null, innerHTML:str }], [data, option]);
+	return $.fn.ptmpl.apply([{ innerHTML:str }], [data, option]);
+}
+
+function ptmplStatic(id, data, option) {
+	return $.fn.ptmpl.apply([{ id:id.replace('#', '') }], [data, option]);
 }
 
 function ptmplDefineTag(map) {
@@ -59,13 +65,13 @@ function ptmplUndefineTag(list) {
 function ptmplCompile(text, option, debugInfo) {
 	if (!option) option = {};
 	var code = [];
-	if (!option.noDebugInfo) code.push('try {');
-	code.push('var _PTMPL_HTML = [];');
-	code.push('with ($.ptmplScope(_PTMPL_ARG)) {');
+	if (!option.noDebugInfoOnExecute) code.push('try {\n');
+	code.push('var _PTMPL_HTML = [];\n');
+	code.push('with ($.ptmplScope(_PTMPL_ARG)) {\n');
 	text.replace(/((?:a|[^a])*?)(?:\{\{((?:a|[^a])*?)\}\}|$)/g, function (all, html, tag) {
 		if (html) {
 			var line = $.ptmplTranslateHtmlToLiteral(html);
-			if (line) code.push('_PTMPL_HTML.push("', line, '");');
+			if (line) code.push('_PTMPL_HTML.push("', line, '");\n');
 		}
 		if (tag) {
 			tag.match(/([^\s\(]+)((?:a|[^a])*)/);
@@ -74,11 +80,11 @@ function ptmplCompile(text, option, debugInfo) {
 			$.ptmplTagTable[key](code, str, option);
 		}
 	});
-	code.push('}');
+	code.push('}\n');
 	code.push('return _PTMPL_HTML.join("");');
-	if (!option.noDebugInfo) {
-		code.push('} catch (e) {');
-		code.push('throw new Error("RuntimeError in '+$.ptmplEscapeStringLiteral(debugInfo.id ? debugInfo.id : debugInfo.text.slice(0, 100))+', "+e.message);');
+	if (!option.noDebugInfoOnExecute) {
+		code.push('\n} catch (e) {\n');
+		code.push('throw new Error("RuntimeError in '+$.ptmplEscapeStringLiteral(debugInfo.id ? debugInfo.id : debugInfo.text.slice(0, 100))+', "+e.message);\n');
 		code.push('}');
 	}
 	var joined = code.join('');
@@ -88,7 +94,7 @@ function ptmplCompile(text, option, debugInfo) {
 	try {
 		var tmpl = new Function('_PTMPL_OPTION', '_PTMPL_ARG', joined);
 	} catch (e) {
-		if (!option.noDebugInfo) {
+		if (!option.noDebugInfoOnCompile) {
 			e.message += ' in '+(debugInfo.id ? debugInfo.id : debugInfo.text.slice(0, 100));
 		}
 		throw e;
@@ -148,19 +154,19 @@ function ptmplScope(map) {
 $.ptmplDefineTag({
 	// not escaped output
 	'html': function (code, str) {
-		code.push('_PTMPL_HTML.push((', str, '));');
+		code.push('_PTMPL_HTML.push((', str, '));\n');
 	},
 	// html escaped output
 	'=': function (code, str) {
-		code.push('_PTMPL_HTML.push($.ptmplEscapeHtml((', str, ')));');
+		code.push('_PTMPL_HTML.push($.ptmplEscapeHtml((', str, ')));\n');
 	},
 	// url escaped output
 	'~': function (code, str) {
-		code.push('_PTMPL_HTML.push($.ptmplEscapeHtml($.ptmplEscapeUrl((', str, '))));');
+		code.push('_PTMPL_HTML.push($.ptmplEscapeHtml($.ptmplEscapeUrl((', str, '))));\n');
 	},
 	// evaluate
 	'$': function (code, str) {
-		code.push(str);
+		code.push(str, '\n');
 	},
 	// comment
 	'!': function (code, str) {
@@ -171,41 +177,41 @@ $.ptmplDefineTag({
 var el;
 $.ptmplDefineTag({
 	'if': function (code, str) {
-		code.push('if (', str, ') {');
+		code.push('if (', str, ') {\n');
 	},
 	'el': el = function (code, str) {
 		if (str) {
-			code.push('} else if (', str, ') {');
+			code.push('} else if (', str, ') {\n');
 		} else {
-			code.push('} else {');
+			code.push('} else {\n');
 		}
 	},
 	'else': el,
 	'/if': function (code, str) {
-		code.push('}');
+		code.push('}\n');
 	}});
 
 $.ptmplDefineTag({
 	'tryif': function (code, str) {
-		code.push('if ((function () { try { return (', str, '); } catch (e) {} })()) {');
+		code.push('if ((function () { try { return (', str, '); } catch (e) {} })()) {\n');
 	},
 	'catchelse': el = function (code, str) {
 		if (str) {
-			code.push('} else if ((function () { try { return (', str, '); } catch (e) {} })()) {');
+			code.push('} else if ((function () { try { return (', str, '); } catch (e) {} })()) {\n');
 		} else {
-			code.push('} else {');
+			code.push('} else {\n');
 		}
 	},
 	'/tryif': function (code, str) {
-		code.push('}');
+		code.push('}\n');
 	}});
 
 $.ptmplDefineTag({
 	'for': function (code, str) {
-		code.push('for (', str, ') {');
+		code.push('for (', str, ') {\n');
 	},
 	'/for': function (code, str) {
-		code.push('}');
+		code.push('}\n');
 	}});
 
 $.ptmplDefineTag({
@@ -215,16 +221,16 @@ $.ptmplDefineTag({
 		var key = RegExp.$1;
 		var val = RegExp.$2;
 		var exp = RegExp.$3;
-		code.push('$.each((', exp, '), function (', key, ',', val, ') {');
+		code.push('$.each((', exp, '), function (', key, ',', val, ') {\n');
 	},
 	'/each': function (code, str) {
-		code.push('});');
+		code.push('});\n');
 	},
 	'continue': function (code, str) {
-		code.push('return true;');
+		code.push('return true;\n');
 	},
 	'break': function (code, str) {
-		code.push('return false;');
+		code.push('return false;\n');
 	}});
 
 $.ptmplDefineTag({
@@ -236,9 +242,9 @@ $.ptmplDefineTag({
 		// optimization, avoid $.find() if simple id selector.
 		var id = selector.match(/^\s*['"]#(.+?)["']\s*$/) && RegExp.$1;
 		if (id) {
-			code.push('_PTMPL_HTML.push($.ptmplGetCompiled({ id:"', id, '" }, _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
+			code.push('_PTMPL_HTML.push($.ptmplGetCompiled({ id:"', id, '" }, _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));\n');
 		} else {
-			code.push('_PTMPL_HTML.push($.ptmplGetCompiled($.find((', selector, '))[0], _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));');
+			code.push('_PTMPL_HTML.push($.ptmplGetCompiled($.find((', selector, '))[0], _PTMPL_OPTION)(_PTMPL_OPTION, (', arg, ')));\n');
 		}
 	}});
 
