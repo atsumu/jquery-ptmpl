@@ -42,7 +42,7 @@ for (var i in configs) {
 	var config = configs[i];
 	for (var j in config.scripts) {
 		var script = config.scripts[j];
-		if (path.existsSync(script)) {
+		if (path.existsSync(require.resolve(script))) {
 		} else {
 			console.log('Error: '+script+' does not exist. ');
 			process.exit(1);
@@ -75,7 +75,7 @@ if (commands[command]) {
 }
 
 function usage(commands) {
-	console.log('Usage: node compile.js <command> [<src> <dst>]');
+	console.log('Usage: ptmpl <command> [<src> <dst>]');
 	console.log('<command>');
 	for (var name in commands) {
 		console.log('  * '+name);
