@@ -81,6 +81,7 @@ function usage(commands) {
 		console.log('  * '+name);
 	}
 	console.log('Both of <src> and <dst> must be file, or both of <src> and <dst> must be directory.');
+	console.log('If <src> and <dst> are not passed, then ptmpl loads config from ./config.js.');
 }
 
 function commands() {

@@ -317,3 +317,31 @@ it works at compile-time.
   });
 </script>
 ```
+
+## Static Compiler
+
+jquery-ptmpl has static compile command likes Compass.
+It depends on node.js and jsdom.
+
+### Install
+
+```
+$ cd jquery-ptmpl
+$ npm install
+$ wget http://code.jquery.com/jquery-1.7.2.js
+$ ln -s jquery-1.7.2.js jquery.js
+```
+
+### Usage
+
+```
+$ cd jquery-ptmpl
+$ ./bin/ptmpl <command> [<src> <dst>]
+
+# <command>
+#   * compile
+#   * watch
+# Both of <src> and <dst> must be file, or both of <src> and <dst> must be directory.
+# If <src> and <dst> are not passed, then ptmpl loads config from ./config.js.
+```
+
