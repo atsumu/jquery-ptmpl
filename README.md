@@ -202,7 +202,7 @@ requires `;` at end of sentence, because codes are joined to 1 line.
 
 #### sample
 ```html
-<script id="sample" type="text/x-jquery-ptmpl">
+<script id="sample" type="text/x-jquery-tmpl">
   {{$ var x = a.slice(0, 2); }}
   {{$ try { }}
     {{$ console.log(x); }}
@@ -345,3 +345,31 @@ $ ./bin/ptmpl <command> [<src> <dst>]
 # If <src> and <dst> are not passed, then ptmpl loads config from ./config.js.
 ```
 
+### Sample
+
+```
+# file: sample.ptmpl
+<script id="sample" type="text/x-jquery-tmpl">
+  <div>a: {{= a}}</div>
+</script>
+```
+
+```
+$ ./bin/ptmpl compile sample.ptmpl sample.ptmpl.js
+```
+
+```
+# file: sample.html
+<html>
+<head>
+<script src="jquery.js"></script>
+<script src="jquery.ptmpl.js"></script>
+<script src="sample.ptmpl.js"></script>
+<script>
+  jQuery(function ($) {
+    jQuery.ptmplStatic("#sample", { a:3 }).appendTo("#place");
+  });
+</script>
+<body>
+<div id="place"></div>
+```
